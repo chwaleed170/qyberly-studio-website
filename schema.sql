@@ -10,10 +10,13 @@ CREATE TABLE IF NOT EXISTS leads (
   details TEXT NOT NULL,
   source TEXT NOT NULL DEFAULT 'website',
   status TEXT NOT NULL DEFAULT 'new',
+  follow_up_at TEXT,
+  internal_notes TEXT NOT NULL DEFAULT '',
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_leads_created_at ON leads(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_leads_status ON leads(status);
+CREATE INDEX IF NOT EXISTS idx_leads_follow_up ON leads(follow_up_at);
 CREATE TABLE IF NOT EXISTS lead_rate_limits (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   bucket_key TEXT NOT NULL,
