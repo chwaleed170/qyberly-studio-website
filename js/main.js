@@ -340,6 +340,17 @@
     }
     const engagementMap = { project: 'Focused project', sprint: 'Creative sprint', ongoing: 'Ongoing support' };
     if (engagementMap[params.get('engagement')]) document.getElementById('engagement').value = engagementMap[params.get('engagement')];
+    const packageMap = {
+      'digital-launch': { services: ['Web development'], details: 'I am interested in the Digital Launch pathway. Please help me scope a responsive business website.' },
+      'brand-presence': { services: ['Graphic design'], details: 'I am interested in the Brand Presence pathway. Please help me scope a visual identity and creative asset system.' },
+      'qyberly-360': { services: ['Web development', 'Graphic design', 'Video production'], details: 'I am interested in QYBERLY 360°. Please help me scope a connected website, brand identity and promotional creative launch.' }
+    };
+    const selectedPackage = packageMap[params.get('package')];
+    if (selectedPackage) {
+      serviceBoxes.forEach(box => box.checked = selectedPackage.services.includes(box.value));
+      const detailsField = document.getElementById('project-details');
+      if (!detailsField.value.trim()) detailsField.value = selectedPackage.details;
+    }
     if (serviceMap[preferredService]) serviceBoxes.forEach(box => { box.checked = box.value === serviceMap[preferredService]; });
     updateProgress();
     document.getElementById('copy-brief')?.addEventListener('click', async () => {
