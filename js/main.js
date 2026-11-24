@@ -269,7 +269,7 @@
   });
   palette?.addEventListener('click', event => { if (event.target === palette) palette.close(); });
 
-  // Contact brief builder: local draft, copy and mailto handoff. No server falsely implied.
+  // Contact brief builder: local draft, secure lead submission and email fallback.
   const form = document.getElementById('brief-form');
   if (form) {
     const status = document.getElementById('form-status');
@@ -392,7 +392,7 @@
         setStatus('Online submission is not available yet. Your email app will open with the brief as a backup; review it and press Send.', 'error');
         window.location.href = `mailto:qyberly.studio@gmail.com?subject=${subject}&body=${body}`;
       } finally {
-        if (submitButton) { submitButton.disabled = false; submitButton.textContent = 'Prepare email enquiry ↗'; }
+        if (submitButton) { submitButton.disabled = false; submitButton.textContent = 'Send project enquiry ↗'; }
       }
     });
   }
