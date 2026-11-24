@@ -269,6 +269,28 @@
   });
   palette?.addEventListener('click', event => { if (event.target === palette) palette.close(); });
 
+  // First-touch attribution: retain the original campaign/referrer as visitors move around the site.
+  const attributionKey = 'qyberly_first_touch_v1';
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const campaignSource = params.get('utm_source');
+    const explicitSource = params.get('source');
+    const externalReferrer = document.referrer ? new URL(document.referrer).hostname.replace(/^www\\./, '') : '';
+    const currentHost = window.location.hostname;
+    const referrerIsExternal = externalReferrer && externalReferrer !== currentHost;
+    const incomingSource = campaignSource || explicitSource || (referrerIsExternal ? externalReferrer : '');
+    if (incomingSource) {
+      const attribution = {
+        source: incomingSource.toLowerCase().slice(0, 60),
+        medium: (params.get('utm_medium') || '').slice(0, 40),
+        campaign: (params.get('utm_campaign') || '').slice(0, 60)
+      };
+      localStorage.setItem(attributionKey, JSON.stringify(attribution));
+    } else if (!localStorage.getItem(attributionKey)) {
+      localStorage.setItem(attributionKey, JSON.stringify({source:'direct',medium:'',campaign:''}));
+    }
+  } catch (error) { /* Attribution is optional; the enquiry form must still work. */ }
+
   // Contact brief builder: local draft, secure lead submission and email fallback.
   const form = document.getElementById('brief-form');
   if (form) {
@@ -378,7 +400,10 @@
       }
       const submitButton = form.querySelector('button[type="submit"]');
       if (submitButton) { submitButton.disabled = true; submitButton.textContent = 'Sending securely…'; }
-      const payload = {...data, source: new URLSearchParams(window.location.search).get('source') || 'website-contact', website: form.querySelector('[name="website"]')?.value || ''};
+      let attribution = {source:'direct',medium:'',campaign:''};
+      try { attribution = {...attribution, ...JSON.parse(localStorage.getItem(attributionKey) || '{}')}; } catch (error) {}
+      const sourceLabel = [attribution.source, attribution.medium, attribution.campaign].filter(Boolean).join(' / ').slice(0, 80);
+      const payload = {...data, source: sourceLabel || 'direct', website: form.querySelector('[name="website"]')?.value || ''};
       try {
         const response = await fetch('/api/leads', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
         const result = await response.json();
