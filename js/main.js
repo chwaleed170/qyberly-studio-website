@@ -369,18 +369,31 @@
       try { localStorage.removeItem(storageKey); } catch (error) { /* Storage may be disabled. */ }
       updateProgress(); setStatus('Your brief has been cleared from this form and this browser.', 'success');
     });
-    form.addEventListener('submit', event => {
+    form.addEventListener('submit', async event => {
       event.preventDefault();
       const data = values();
-      if (!data.name || !data.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email) || !data.services.length || !data.details) {
+      if (!data.name || !data.email || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(data.email) || !data.services.length || !data.details) {
         setStatus('Please add your name, a valid email, at least one service and a short project description.', 'error');
-        form.querySelector(':invalid')?.focus();
-        return;
+        form.querySelector(':invalid')?.focus(); return;
       }
-      const subject = encodeURIComponent(`Project enquiry from ${data.name} | QYBERLY`);
-      const body = encodeURIComponent(makeBrief(data));
-      setStatus('Your email app should open with the project brief ready. Review it and press Send in your email app.', 'success');
-      window.location.href = `mailto:qyberly.studio@gmail.com?subject=${subject}&body=${body}`;
+      const submitButton = form.querySelector('button[type="submit"]');
+      if (submitButton) { submitButton.disabled = true; submitButton.textContent = 'Sending securely…'; }
+      const payload = {...data, source: new URLSearchParams(window.location.search).get('source') || 'website-contact', website: form.querySelector('[name="website"]')?.value || ''};
+      try {
+        const response = await fetch('/api/leads', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+        const result = await response.json();
+        if (!response.ok || !result.ok) throw new Error(result.message || 'The enquiry could not be saved.');
+        setStatus('Your enquiry has been received securely. We will review your brief and reply by email. Reference: ' + result.id.slice(0,8), 'success');
+        try { localStorage.removeItem(storageKey); } catch (error) {}
+        form.reset(); updateProgress();
+      } catch (error) {
+        const subject = encodeURIComponent(`Project enquiry from ${data.name} | QYBERLY`);
+        const body = encodeURIComponent(makeBrief(data));
+        setStatus('Online submission is not available yet. Your email app will open with the brief as a backup; review it and press Send.', 'error');
+        window.location.href = `mailto:qyberly.studio@gmail.com?subject=${subject}&body=${body}`;
+      } finally {
+        if (submitButton) { submitButton.disabled = false; submitButton.textContent = 'Prepare email enquiry ↗'; }
+      }
     });
   }
 })();
