@@ -34,7 +34,7 @@ export async function onRequestGet({request,env}) {
 
 export async function onRequestPatch({request,env}) {
   if(!env.LEADS_DB)return json({ok:false,message:"Lead storage is not configured."},503);
-  const token=(request.headers.get("Authorization")||"").replace(/^Bearer\\s+/i,"");
+  const token=(request.headers.get("Authorization")||"").replace(/^Bearer\s+/i,"");
   if(!env.QYBERLY_ADMIN_TOKEN||token!==env.QYBERLY_ADMIN_TOKEN)return json({ok:false,message:"Unauthorised."},401);
   const origin=request.headers.get("Origin"),ownOrigin=new URL(request.url).origin;
   if(origin&&origin!==ownOrigin)return json({ok:false,message:"Origin not allowed."},403);
