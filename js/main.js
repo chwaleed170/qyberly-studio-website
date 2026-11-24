@@ -372,7 +372,7 @@
     form.addEventListener('submit', async event => {
       event.preventDefault();
       const data = values();
-      if (!data.name || !data.email || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(data.email) || !data.services.length || !data.details) {
+      if (!data.name || !data.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email) || !data.services.length || !data.details) {
         setStatus('Please add your name, a valid email, at least one service and a short project description.', 'error');
         form.querySelector(':invalid')?.focus(); return;
       }
