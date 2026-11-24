@@ -31,3 +31,17 @@ export async function onRequestGet({request,env}) {
   const {results=[]}=await env.LEADS_DB.prepare("SELECT id,name,email,business,services,engagement,budget,timeline,details,source,status,created_at FROM leads ORDER BY created_at DESC LIMIT ?").bind(limit).all();
   return json({ok:true,leads:results});
 }
+
+export async function onRequestPatch({request,env}) {
+  if(!env.LEADS_DB)return json({ok:false,message:"Lead storage is not configured."},503);
+  const token=(request.headers.get("Authorization")||"").replace(/^Bearer\\s+/i,"");
+  if(!env.QYBERLY_ADMIN_TOKEN||token!==env.QYBERLY_ADMIN_TOKEN)return json({ok:false,message:"Unauthorised."},401);
+  const origin=request.headers.get("Origin"),ownOrigin=new URL(request.url).origin;
+  if(origin&&origin!==ownOrigin)return json({ok:false,message:"Origin not allowed."},403);
+  let body;try{body=await request.json()}catch{return json({ok:false,message:"Invalid JSON."},400)}
+  const id=clean(body.id,80),status=clean(body.status,20);
+  if(!id||!["new","contacted","qualified","won","lost"].includes(status))return json({ok:false,message:"Invalid lead or pipeline status."},422);
+  const result=await env.LEADS_DB.prepare("UPDATE leads SET status=? WHERE id=?").bind(status,id).run();
+  if(!result.meta?.changes)return json({ok:false,message:"Lead not found."},404);
+  return json({ok:true,message:"Lead status updated."});
+}
